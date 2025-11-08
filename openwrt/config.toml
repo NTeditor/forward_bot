@@ -1,0 +1,4 @@
+token = "<TOKEN>"
+chat_id = <TARGET CHAT ID>
+# thread_id = <TARGET THREAD ID>
+# allowed_users = [<ALLOWED USERS>]

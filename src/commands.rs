@@ -1,3 +1,4 @@
+use anyhow::Result;
 use log::{error, info, warn};
 use std::sync::Arc;
 use teloxide::{
@@ -30,41 +31,46 @@ pub async fn get_chat_id(bot: Bot, msg: Message) -> Result<(), teloxide::Request
 pub async fn forward(
     bot: Bot,
     msg: Message,
-    allow_users: Arc<Vec<u64>>,
+    allow_users: Arc<Option<Vec<u64>>>,
     target_chat_id: Arc<ChatId>,
     thread_id: Option<ThreadId>,
 ) -> Result<(), teloxide::RequestError> {
-    if let Some(user) = msg.from {
-        if allow_users.is_empty() {
-            warn!("allow_users is empty: ALLOW FORWARD FOR ALL USERS!!!");
-        }
-        if allow_users.is_empty() || allow_users.contains(&user.id.0) {
-            let message = bot.forward_message(*target_chat_id, msg.chat.id, msg.id);
-            if let Some(thread_id) = thread_id {
-                message.message_thread_id(thread_id).await?;
-            } else {
-                message.await?;
-            }
-
-            bot.send_message(msg.chat.id, "✅ Success").await?;
-            info!(
-                "Message '{}' forwarded to '{}' from user '{}'",
-                msg.id, target_chat_id.0, user.id
-            );
-        } else {
-            bot.send_message(msg.chat.id, "⛔️ Access Denied").await?;
-            warn!(
-                "Access denied for user '{}' trying to forward message '{}",
-                user.id, msg.id
-            );
-        }
-    } else {
+    let Some(user) = msg.from else {
         bot.send_message(msg.chat.id, "⚠️ Failed get your id")
             .await?;
         error!(
             "Failed get user id. Chat: '{}', Message: '{}'",
             msg.chat.id, msg.id
         );
+        return Ok(());
+    };
+
+    let is_allow = match allow_users.as_deref() {
+        Some(value) => value.contains(&user.id.0),
+        None => true,
+    };
+
+    if !is_allow {
+        bot.send_message(msg.chat.id, "⛔️ Access Denied").await?;
+        warn!(
+            "Access denied for user '{}' trying to forward message '{}",
+            user.id, msg.id
+        );
+        return Ok(());
     }
+
+    let mut message = bot.forward_message(*target_chat_id, msg.chat.id, msg.id);
+    if let Some(thread_id) = thread_id {
+        message = message.message_thread_id(thread_id);
+    }
+
+    message.await?;
+
+    bot.send_message(msg.chat.id, "✅ Success").await?;
+    info!(
+        "Message '{}' forwarded to '{}' from user '{}'",
+        msg.id, target_chat_id.0, user.id
+    );
+
     Ok(())
 }
