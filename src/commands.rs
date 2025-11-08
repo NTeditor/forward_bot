@@ -1,6 +1,8 @@
 use log::{error, info, warn};
 use std::sync::Arc;
-use teloxide::{prelude::*, sugar::request::RequestReplyExt};
+use teloxide::{
+    payloads::ForwardMessageSetters, prelude::*, sugar::request::RequestReplyExt, types::ThreadId,
+};
 
 const START_TEXT: &str = "Hi.";
 
@@ -30,14 +32,20 @@ pub async fn forward(
     msg: Message,
     allow_users: Arc<Vec<u64>>,
     target_chat_id: Arc<ChatId>,
+    thread_id: Option<ThreadId>,
 ) -> Result<(), teloxide::RequestError> {
     if let Some(user) = msg.from {
         if allow_users.is_empty() {
             warn!("allow_users is empty: ALLOW FORWARD FOR ALL USERS!!!");
         }
         if allow_users.is_empty() || allow_users.contains(&user.id.0) {
-            bot.forward_message(*target_chat_id, msg.chat.id, msg.id)
-                .await?;
+            let message = bot.forward_message(*target_chat_id, msg.chat.id, msg.id);
+            if let Some(thread_id) = thread_id {
+                message.message_thread_id(thread_id).await?;
+            } else {
+                message.await?;
+            }
+
             bot.send_message(msg.chat.id, "✅ Success").await?;
             info!(
                 "Message '{}' forwarded to '{}' from user '{}'",

@@ -3,7 +3,11 @@ mod commands;
 use clap::Parser;
 use log::{error, info, warn};
 use std::sync::Arc;
-use teloxide::{prelude::*, utils::command::BotCommands};
+use teloxide::{
+    prelude::*,
+    types::{MessageId, ThreadId},
+    utils::command::BotCommands,
+};
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -12,6 +16,9 @@ struct Cli {
 
     #[arg(long)]
     chat_id: i64,
+
+    #[arg(long)]
+    thread_id: Option<i32>,
 
     #[arg(long, trailing_var_arg = true)]
     allow_users: Vec<u64>,
@@ -36,6 +43,11 @@ async fn main() {
     info!("Starting bot...");
     info!("Telegram token -> '{}'", cli.token);
     info!("Target chat ID -> '{}'", cli.chat_id);
+    if let Some(thread_id) = cli.thread_id {
+        info!("Target thread ID -> '{}'", thread_id);
+    } else {
+        info!("Target thread ID -> 'None'");
+    }
     if cli.allow_users.is_empty() {
         info!("Alowed users -> 'Empty'");
         warn!("FORWARDING MESSAGES TO ALL USERS IS ALLOWED!!!");
@@ -48,6 +60,11 @@ async fn main() {
 
     let allow_users = Arc::new(cli.allow_users);
     let target_chat_id = Arc::new(ChatId(cli.chat_id));
+    let thread_id = if let Some(thread_id) = cli.thread_id {
+        Some(ThreadId(MessageId(thread_id)))
+    } else {
+        None
+    };
 
     let command_handler = teloxide::filter_command::<Command, _>()
         .branch(dptree::case![Command::Start].endpoint(commands::start))
@@ -59,11 +76,13 @@ async fn main() {
             dptree::filter(|msg: Message| msg.chat.is_private()).endpoint(
                 move |bot: Bot, msg: Message| {
                     let allow_users = Arc::clone(&allow_users);
-                    let target_chat_id = Arc::clone(&target_chat_id);
-                    async move { commands::forward(bot, msg, allow_users, target_chat_id).await }
+                    let chat_id = Arc::clone(&target_chat_id);
+                    async move {
+                        commands::forward(bot, msg, allow_users, chat_id, thread_id).await
+                    }
                 },
             ),
-        )
+        ).branch(dptree::endpoint(|| async move { respond(()) }))
     };
 
     info!("Check bot is present in chat");
