@@ -25,6 +25,8 @@ struct Cli {
 enum Command {
     #[command(description = "Start bot")]
     Start,
+    #[command(description = "get chat id")]
+    GetChatId,
 }
 
 #[tokio::main]
@@ -34,7 +36,12 @@ async fn main() {
     info!("Starting bot...");
     info!("Telegram token -> '{}'", cli.token);
     info!("Target chat ID -> '{}'", cli.chat_id);
-    info!("Alowed users -> '{:?}'", cli.allow_users);
+    if cli.allow_users.is_empty() {
+        info!("Alowed users -> 'Empty'");
+        warn!("FORWARDING MESSAGES TO ALL USERS IS ALLOWED!!!");
+    } else {
+        info!("Alowed users -> '{:?}'", cli.allow_users);
+    }
 
     let bot = Bot::new(cli.token);
     info!("Bot instance created");
@@ -43,12 +50,11 @@ async fn main() {
     let target_chat_id = Arc::new(ChatId(cli.chat_id));
 
     let command_handler = teloxide::filter_command::<Command, _>()
-        .branch(dptree::case![Command::Start])
-        .endpoint(commands::start);
+        .branch(dptree::case![Command::Start].endpoint(commands::start))
+        .branch(dptree::case![Command::GetChatId].endpoint(commands::get_chat_id));
 
     let handler = {
         let target_chat_id = Arc::clone(&target_chat_id);
-        let allow_users = Arc::clone(&allow_users);
         Update::filter_message().branch(command_handler).branch(
             dptree::filter(|msg: Message| msg.chat.is_private()).endpoint(
                 move |bot: Bot, msg: Message| {
@@ -59,10 +65,6 @@ async fn main() {
             ),
         )
     };
-
-    if allow_users.is_empty() {
-        warn!("allow_users is empty: ALLOW FORWARD FOR ALL USERS!!!");
-    }
 
     info!("Check bot is present in chat");
     check_bot_in_chat(&bot, target_chat_id).await;

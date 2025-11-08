@@ -1,11 +1,27 @@
 use log::{error, info, warn};
 use std::sync::Arc;
-use teloxide::prelude::*;
+use teloxide::{prelude::*, sugar::request::RequestReplyExt};
 
 const START_TEXT: &str = "Hi.";
 
 pub async fn start(bot: Bot, msg: Message) -> Result<(), teloxide::RequestError> {
     bot.send_message(msg.chat.id, START_TEXT).await?;
+    Ok(())
+}
+
+pub async fn get_chat_id(bot: Bot, msg: Message) -> Result<(), teloxide::RequestError> {
+    let thread_id = if let Some(thread_id) = msg.thread_id {
+        thread_id.0.0.to_string()
+    } else {
+        String::from("None")
+    };
+    bot.send_message(
+        msg.chat.id,
+        format!("Chat id: {}, Thread: {}", msg.chat.id, thread_id),
+    )
+    .reply_to(msg.id)
+    .await?;
+
     Ok(())
 }
 
