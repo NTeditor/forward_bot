@@ -1,0 +1,12 @@
+[package]
+name = "forward_bot"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-only"
+
+[dependencies]
+teloxide = { version = "0.17.0", features = ["macros"] }
+tokio = { version =  "1.48.0", features = ["rt-multi-thread", "macros"] }
+pretty_env_logger = "0.5"
+log = "0.4.28"
+clap = { version = "4.5.51", features = ["derive"] }
