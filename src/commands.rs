@@ -8,23 +8,24 @@ use teloxide::{
 const START_TEXT: &str = "Hi.";
 
 pub async fn start(bot: Bot, msg: Message) -> Result<(), teloxide::RequestError> {
-    bot.send_message(msg.chat.id, START_TEXT).await?;
+    bot.send_message(msg.chat.id, START_TEXT)
+        .reply_to(msg.id)
+        .await?;
     Ok(())
 }
 
 pub async fn get_chat_id(bot: Bot, msg: Message) -> Result<(), teloxide::RequestError> {
-    let thread_id = if let Some(thread_id) = msg.thread_id {
-        thread_id.0.0.to_string()
-    } else {
-        String::from("None")
+    let thread_id = match msg.thread_id {
+        Some(value) => value.0.0.to_string(),
+        None => String::from("None"),
     };
+
     bot.send_message(
         msg.chat.id,
-        format!("Chat id: {}, Thread: {}", msg.chat.id, thread_id),
+        format!("Chat ID: {}, Thread ID: {}", msg.chat.id, thread_id),
     )
     .reply_to(msg.id)
     .await?;
-
     Ok(())
 }
 
@@ -36,10 +37,10 @@ pub async fn forward(
     thread_id: Option<ThreadId>,
 ) -> Result<(), teloxide::RequestError> {
     let Some(user) = msg.from else {
-        bot.send_message(msg.chat.id, "⚠️ Failed get your id")
+        bot.send_message(msg.chat.id, "⚠️ Failed get your ID")
             .await?;
         error!(
-            "Failed get user id. Chat: '{}', Message: '{}'",
+            "Failed get user ID. Chat ID: '{}', Message ID: '{}'",
             msg.chat.id, msg.id
         );
         return Ok(());
@@ -71,6 +72,5 @@ pub async fn forward(
         "Message '{}' forwarded to '{}' from user '{}'",
         msg.id, target_chat_id.0, user.id
     );
-
     Ok(())
 }
