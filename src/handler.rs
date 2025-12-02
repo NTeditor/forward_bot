@@ -35,7 +35,8 @@ pub async fn command_handler(
         Command::GetChatId => {
             let message_text = format!(
                 "chat_id = <code>{}</code>\nthread_id = <code>{:?}</code>",
-                message.chat.id, message.thread_id
+                message.chat.id.0,
+                message.thread_id.map(|id| id.0.0)
             );
             bot.send_message(message.chat.id, message_text)
                 .reply_to(message.id)
