@@ -1,0 +1,32 @@
+# THIS CONFIGURATION WAS CREATED BY AI
+
+# Telegram Bot Token
+# Get it from @BotFather
+token = "YOUR_BOT_TOKEN_HERE"
+
+# User IDs allowed to forward messages
+# If empty [] or removed - everyone can forward
+allowed_users = []
+
+[target]
+# Destination chat ID (where to forward messages)
+chat_id = -1001234567890
+# Thread/topic ID in the chat (if forwarding to specific topic)
+# Leave empty or remove if not needed
+thread_id = 123
+
+[messages]
+# Message for /start command
+start_command = "👋 Hello! I'm a forwarding bot. Just send me any message and I'll forward it to the specified chat."
+
+# Message on successful forwarding
+success_forward = "✅ Message forwarded successfully!"
+
+# Message on access denied
+access_denied_forward = "⛔ You don't have permission to forward messages."
+
+# Message when sender cannot be determined
+unknown_sender = "❌ Could not determine message sender."
+
+# Message on forwarding failure
+failed_to_forward = "❌ Failed to forward the message."
