@@ -33,4 +33,6 @@ pub struct Messages {
     pub start_command: String,
     pub success_forward: String,
     pub access_denied_forward: String,
+    pub unknown_sender: String,
+    pub failed_to_forward: String,
 }

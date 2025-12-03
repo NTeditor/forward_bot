@@ -66,13 +66,10 @@ pub async fn forward_handler(bot: Bot, message: Message, config: Arc<Config>) ->
             message_id = ?message.id,
             "The message sender could not be determined"
         );
-        bot.send_message(
-            message.chat.id,
-            "❌ The message sender could not be determined",
-        )
-        .reply_to(message.id)
-        .await
-        .context("Failed to send 'error' message")?;
+        bot.send_message(message.chat.id, &messages.unknown_sender)
+            .reply_to(message.id)
+            .await
+            .context("Failed to send 'error' message")?;
 
         bail!("The message sender could not be determined");
     };
@@ -133,7 +130,7 @@ pub async fn forward_handler(bot: Bot, message: Message, config: Arc<Config>) ->
                 err = ?err,
                 "Failed to forward message"
             );
-            bot.send_message(message.chat.id, "❌ Failed to forward message")
+            bot.send_message(message.chat.id, &messages.failed_to_forward)
                 .reply_to(message.id)
                 .await
                 .context("Failed to send 'error' message")?;
