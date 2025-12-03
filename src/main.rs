@@ -25,7 +25,7 @@ const CONFIG_PATH: Option<&str> = option_env!("CONFIG_PATH");
 #[derive(BotCommands, Clone, Debug)]
 #[command(
     rename_rule = "snake_case",
-    description = "These commands are supported:"
+    description = "Send message to forward to private chat.\nThese commands are supported:"
 )]
 enum Command {
     #[command(description = "Print start message.")]

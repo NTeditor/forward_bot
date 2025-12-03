@@ -19,7 +19,8 @@ pub async fn command_handler(
     tracing::info!(
         command = ?command,
         chat_id = ?message.chat.id,
-        user_id = ?message.from.map(|u| u.id),
+        username = ?message.from.as_ref().map(|u| u.username.as_deref()),
+        user_id = ?message.from.as_ref().map(|u| u.id),
         "Received and processing command"
     );
 
@@ -64,7 +65,7 @@ pub async fn forward_handler(bot: Bot, message: Message, config: Arc<Config>) ->
         );
         bot.send_message(
             message.chat.id,
-            "ERROR: The message sender could not be determined",
+            "❌ The message sender could not be determined",
         )
         .reply_to(message.id)
         .await
@@ -128,7 +129,7 @@ pub async fn forward_handler(bot: Bot, message: Message, config: Arc<Config>) ->
                 err = ?err,
                 "Failed to forward message"
             );
-            bot.send_message(message.chat.id, format!("Failed to forward message"))
+            bot.send_message(message.chat.id, "❌ Failed to forward message")
                 .reply_to(message.id)
                 .await
                 .context("Failed to send 'error' message")?;

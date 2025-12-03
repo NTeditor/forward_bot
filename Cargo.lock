@@ -277,6 +277,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "forward_bot"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "teloxide",
+ "tokio",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "futures"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1522,19 +1535,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "tg_bot"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "serde",
- "teloxide",
- "tokio",
- "toml",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
