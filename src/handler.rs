@@ -3,7 +3,7 @@ use anyhow::{Context, Result, bail};
 use std::sync::Arc;
 use teloxide::{
     Bot,
-    payloads::{ForwardMessageSetters, SendMessageSetters},
+    payloads::SendMessageSetters,
     prelude::Requester,
     sugar::request::RequestReplyExt,
     types::{ChatId, Message, MessageId, ParseMode, ThreadId},
@@ -16,6 +16,7 @@ pub async fn command_handler(
     command: Command,
     config: Arc<Config>,
 ) -> Result<()> {
+    let messages = &config.messages;
     tracing::info!(
         command = ?command,
         chat_id = ?message.chat.id,
@@ -26,7 +27,7 @@ pub async fn command_handler(
 
     match command {
         Command::Start => {
-            bot.send_message(message.chat.id, &config.messages.start_command)
+            bot.send_message(message.chat.id, &messages.start_command)
                 .await
         }
         Command::Help => {
@@ -51,6 +52,8 @@ pub async fn command_handler(
 }
 
 pub async fn forward_handler(bot: Bot, message: Message, config: Arc<Config>) -> Result<()> {
+    let messages = &config.messages;
+    let target = &config.target;
     tracing::info!(
         chat_id = ?message.chat.id,
         message_id = ?message.id,
@@ -88,7 +91,7 @@ pub async fn forward_handler(bot: Bot, message: Message, config: Arc<Config>) ->
             user_id = ?from.id,
             "Access denied for forwarding message"
         );
-        bot.send_message(message.chat.id, &config.messages.access_denied_forward)
+        bot.send_message(message.chat.id, &messages.access_denied_forward)
             .reply_to(message.id)
             .await
             .context("Failed to send 'access denied' message")?;
@@ -101,10 +104,11 @@ pub async fn forward_handler(bot: Bot, message: Message, config: Arc<Config>) ->
         );
     }
 
-    let result = bot
-        .forward_message(ChatId(config.target.chat_id), message.chat.id, message.id)
-        .message_thread_id(ThreadId(MessageId(config.target.thread_id)))
-        .await;
+    let result = {
+        let mut message = bot.forward_message(ChatId(target.chat_id), message.chat.id, message.id);
+        message.message_thread_id = target.thread_id.map(|id| ThreadId(MessageId(id)));
+        message.await
+    };
 
     match result {
         Ok(_) => {
@@ -115,7 +119,7 @@ pub async fn forward_handler(bot: Bot, message: Message, config: Arc<Config>) ->
                 username = ?from.username,
                 "Success forward message"
             );
-            bot.send_message(message.chat.id, &config.messages.success_forward)
+            bot.send_message(message.chat.id, &messages.success_forward)
                 .reply_to(message.id)
                 .await
                 .context("Failed to send 'success' message")?;

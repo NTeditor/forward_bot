@@ -22,10 +22,10 @@ impl Config {
     }
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Copy, Debug)]
 pub struct Target {
     pub chat_id: i64,
-    pub thread_id: i32,
+    pub thread_id: Option<i32>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
